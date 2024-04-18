@@ -1,0 +1,267 @@
+ソース
+コントラクト
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.2 <0.9.0;
+
+contract Hello {
+    uint256 response = 0;
+    function hello(string memory word) public returns (uint256) {
+        require(
+            keccak256(abi.encodePacked(word)) ==
+                keccak256(abi.encodePacked("hello")),
+            "word is not 'hello'"
+        );
+        response = 1;
+        return response;
+    }
+}
+
+
+
+デプロイ
+const { ethers } = require("hardhat");
+const abiFile = require("./artifacts/contracts/Hello.sol/Hello.json")
+async function deploy() {
+    const provider = ethers.getDefaultProvider(process.env.ALCHEMY_URL)
+    const wallet = new ethers.Wallet(process.env.ACCOUNT_PRIVATE_KEY, provider);
+    const contractFactory = new ethers.ContractFactory(abiFile.abi, abiFile.bytecode, wallet);
+    const contract = await contractFactory.deploy();
+    console.log(contract);
+}
+deploy()
+
+
+デバッグ
+const { ethers } = require("hardhat");
+const abiFile = require("./artifacts/contracts/Hello.sol/Hello.json")
+
+async function debug() {
+    const provider = ethers.getDefaultProvider(process.env.ALCHEMY_URL)
+    const wallet = new ethers.Wallet(process.env.ACCOUNT_PRIVATE_KEY, provider);
+    const deployedAddress = "0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2";
+    const abi = new ethers.Interface(abiFile.abi)
+    console.log
+    const data = abi.encodeFunctionData("hello", ["world"]);
+    const unsignedTx = {
+        to: deployedAddress,
+        data
+    }
+    const tx = await wallet.sendTransaction(unsignedTx);
+    console.log(tx);
+    console.log("---------------------------------------------")
+    const txReceipt = await tx.wait()
+    console.log(txReceipt);
+}
+debug()
+
+
+サイン
+const { ethers } = require("hardhat");
+const abiFile = require("./artifacts/contracts/Hello.sol/Hello.json")
+
+async function sign() {
+    const provider = ethers.getDefaultProvider(process.env.ALCHEMY_URL)
+    const wallet = new ethers.Wallet(process.env.ACCOUNT_PRIVATE_KEY, provider);
+    const deployedAddress = "0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2";
+
+    const abi = new ethers.Interface(abiFile.abi)
+    console.log
+    const data = abi.encodeFunctionData("hello", ["world"]);
+    const unsignedTx = {
+        to: deployedAddress,
+        data
+    }
+    const signedTx = await wallet.signTransaction(unsignedTx);
+    console.log(signedTx)
+}
+sign()
+
+
+
+Revertさせるやつ
+async function sign() {
+
+
+
+    const provider = ethers.getDefaultProvider(process.env.ALCHEMY_URL);
+    const wallet = new ethers.Wallet(process.env.ACCOUNT_PRIVATE_KEY, provider);
+    const deployedAddress = "0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2";
+
+    const abi = new ethers.Interface(abiFile.abi)
+    const data = abi.encodeFunctionData("hello", ["hello"]);
+    // console.log(data)
+
+    const sender = await wallet.getAddress();
+    const unsignedTx = {
+        from: sender,
+        to: deployedAddress,
+        data: data
+    }
+    const populatedTx = await wallet.populateTransaction(unsignedTx)
+    populatedTx.data = "0xa777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000"
+    const signedTx = await wallet.signTransaction(populatedTx);
+    console.log(signedTx)
+}
+sign()
+
+
+
+
+成功時
+レスポンス
+TransactionResponse {
+  provider: JsonRpcProvider {},
+  blockNumber: null,
+  blockHash: null,
+  index: undefined,
+  hash: '0x1c0da6b42a55827f33e0d81b03d1b14b12b5a179e0036590b3130ae90b602049',
+  type: 2,
+  to: '0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2',
+  from: '0x3268Af767738d0608B1416AE2f83e5975b73d69C',
+  nonce: 8,
+  gasLimit: 26117n,
+  gasPrice: undefined,
+  maxPriorityFeePerGas: 994519749n,
+  maxFeePerGas: 1024354977n,
+  maxFeePerBlobGas: null,
+  data: '0xa777d0dc0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000568656c6c6f000000000000000000000000000000000000000000000000000000',
+  value: 0n,
+  chainId: 11155111n,
+  signature: Signature { r: "0xb6d65cd64868ecec4d0fded01a700653872d7ed6848f82443a8ada6ef9b1b49c", s: "0x3f7810994f1a60158567f19af6cb7d5e6d1de7602d382f2b3620003ae119e775", yParity: 1, networkV: null },
+  accessList: [],
+  blobVersionedHashes: null
+}
+
+
+レシート
+
+{"jsonrpc":"2.0","id":1,"result":{"transactionHash":"0x1c0da6b42a55827f33e0d81b03d1b14b12b5a179e0036590b3130ae90b602049","blockHash":"0xcf2c46eb48496f6bd717395761626ba19b1ad4b9777b577c5c8d5c05221e10df","blockNumber":"0x5752b5","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","gasUsed":"0x64af","contractAddress":null,"cumulativeGasUsed":"0x1c55ad9","transactionIndex":"0xc9","from":"0x3268af767738d0608b1416ae2f83e5975b73d69c","to":"0xe13dc4318f77ebb2d70ef52a643d34b56b9692b2","type":"0x2","effectiveGasPrice":"0x3c239315","logs":[],"status":"0x1"}}
+
+
+
+
+
+失敗時
+ethers.jsのエラー
+Error: execution reverted: "word is not 'hello'" (action="estimateGas", data="0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013776f7264206973206e6f74202768656c6c6f2700000000000000000000000000", reason="word is not 'hello'", transaction={ "data": "0xa777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000", "from": "0x3268Af767738d0608B1416AE2f83e5975b73d69C", "to": "0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2" }, invocation=null, revert={ "args": [ "word is not 'hello'" ], "name": "Error", "signature": "Error(string)" }, code=CALL_EXCEPTION, version=6.12.0)
+    at makeError (C:\develop\tutorial_debug_contract\node_modules\ethers\lib.commonjs\utils\errors.js:129:21)
+    at getBuiltinCallException (C:\develop\tutorial_debug_contract\node_modules\ethers\lib.commonjs\abi\abi-coder.js:105:37)
+    at AbiCoder.getBuiltinCallException (C:\develop\tutorial_debug_contract\node_modules\ethers\lib.commonjs\abi\abi-coder.js:206:16)
+    at JsonRpcProvider.getRpcError (C:\develop\tutorial_debug_contract\node_modules\ethers\lib.commonjs\providers\provider-jsonrpc.js:668:43)
+    at C:\develop\tutorial_debug_contract\node_modules\ethers\lib.commonjs\providers\provider-jsonrpc.js:302:45
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'CALL_EXCEPTION',
+  action: 'estimateGas',
+  data: '0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013776f7264206973206e6f74202768656c6c6f2700000000000000000000000000',
+  reason: "word is not 'hello'",
+  transaction: {
+    to: '0xE13Dc4318F77ebB2D70eF52A643D34B56B9692b2',
+    data: '0xa777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000',
+    from: '0x3268Af767738d0608B1416AE2f83e5975b73d69C'
+  },
+  invocation: null,
+  revert: {
+    signature: 'Error(string)',
+    name: 'Error',
+    args: [ "word is not 'hello'" ]
+  },
+  shortMessage: `execution reverted: "word is not 'hello'"`,
+  info: {
+    error: {
+      code: 3,
+      message: "execution reverted: word is not 'hello'",
+      data: '0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013776f7264206973206e6f74202768656c6c6f2700000000000000000000000000'
+    },
+    payload: {
+      method: 'eth_estimateGas',
+      params: [
+        {
+          nonce: '0x9',
+          from: '0x3268af767738d0608b1416ae2f83e5975b73d69c',
+          to: '0xe13dc4318f77ebb2d70ef52a643d34b56b9692b2',
+          data: '0xa777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000'
+        }
+      ],
+      id: 3,
+      jsonrpc: '2.0'
+    }
+  }
+}
+
+
+署名データ
+0x02f8c5808080808094e13dc4318f77ebb2d70ef52a643d34b56b9692b280b864a777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000c001a01d84e851fed8a50e146b58a3f18536794b98f28c4236b30e25261527e72b771ca013ce826a03bd23c60266ea2d3170190524fd1bb6710e51924d2de763fd4feb1b
+
+
+JSON RPCリクエスト
+
+
+funcsig
+a777d0dc
+
+
+
+
+
+0000000000000000000000000000000000000000000000000000000000000020
+0000000000000000000000000000000000000000000000000000000000000005
+776f726c64000000000000000000000000000000000000000000000000000000
+
+
+
+eth_getTransactionByHash
+{
+jsonrpc:"2.0",
+id:1,
+result:{
+blockHash:"0xee5843df805de9a4e61d81c5d183cc192b25f7a01fb113bd3f6df9bfa80f0b00",
+blockNumber:"0x575524",
+hash:"0x2d5f8f1c1ef509e49a0b8e411b8927425166537d3eef175920972d56d287f58e",
+yParity:"0x0",
+accessList:[
+],
+transactionIndex:"0x25",
+type:"0x2",
+nonce:"0xc",
+input:"0xa777d0dc00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005776f726c64000000000000000000000000000000000000000000000000000000",
+r:"0x61691459041238e9a0ab6201a95ed29cb7fef6918c5c715a842c15eaefde94d2",
+s:"0x3617fe576941e1a1df2e373482b0fcd79267fa03ea2185bf3a47cc0ce7bb6eb0",
+chainId:"0xaa36a7",
+v:"0x0",
+gas:"0x6605",
+maxPriorityFeePerGas:"0x3b9aca00",
+from:"0x3268af767738d0608b1416ae2f83e5975b73d69c",
+to:"0xe13dc4318f77ebb2d70ef52a643d34b56b9692b2",
+maxFeePerGas:"0x7e8c2d106",
+value:"0x0",
+gasPrice:"0x4cf2acba1"
+}
+}
+
+
+
+
+
+eth_getTransactionReceipt
+
+{
+jsonrpc:"2.0",
+id:1,
+result:{
+transactionHash:"0x2d5f8f1c1ef509e49a0b8e411b8927425166537d3eef175920972d56d287f58e",
+blockHash:"0xee5843df805de9a4e61d81c5d183cc192b25f7a01fb113bd3f6df9bfa80f0b00",
+blockNumber:"0x575524",
+logsBloom:"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+gasUsed:"0x5c00",
+contractAddress:null,
+cumulativeGasUsed:"0x1a0a8f3",
+transactionIndex:"0x25",
+from:"0x3268af767738d0608b1416ae2f83e5975b73d69c",
+to:"0xe13dc4318f77ebb2d70ef52a643d34b56b9692b2",
+type:"0x2",
+effectiveGasPrice:"0x4cf2acba1",
+logs:[
+],
+status:"0x0"
+}
+}
